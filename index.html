@@ -122,8 +122,7 @@
         #clear-chat {
             margin: 10px;
             padding: 10px 15px;
-            background-color: #dc3545
-;
+            background-color: #dc3545;
             color: white;
             border: none;
             border-radius: 8px;
@@ -138,7 +137,8 @@
             color: white;
             border: none;
             border-radius: 8px;
-            cursor: pointer;
+            cursor: pointer
+;
             transition: background-color 0.3s;
         }
 
@@ -218,12 +218,16 @@
     function buildPrompt() {
         const maxHistoryLength = 8; // Limita o histórico para as últimas 8 interações
         const promptHistory = conversationHistory.slice(-maxHistoryLength);
-        let prompt = `Você é um bom assistente e responde claramente a qualquer dúvida do usuário.`;
+        let prompt = `<s>[INST] Você é um bom assistente, fornecendo respostas úteis e relevantes. [/INST]\n`;
 
         promptHistory.forEach(msg => {
-            prompt += `\n${msg.role === 'user' ? 'Usuário' : 'Assistente'}: ${msg.content}`;
+            if (msg.role === 'user') {
+                prompt += `[INST] ${msg.content} [/INST] `;
+            } else {
+                prompt += `${msg.content} </s> <s>`;
+            }
         });
-        prompt += `\nAssistente:`;
+        prompt += `[INST] ${userInput.value.trim()} [/INST]`;
         return prompt;
     }
 
@@ -256,13 +260,13 @@
             if (botResponse?.generated_text) {
                 botMessage = cleanResponse(botResponse.generated_text);
             } else if (botResponse?.[0]?.generated_text) {
-                botMessage = cleanResponse(botResponse
-[0].generated_text);
+                botMessage = cleanResponse(botResponse[0].generated_text);
             }
 
             // Verificar se a resposta contém código e formatá-lo adequadamente
             if (botMessage.includes('<code>') || botMessage.includes('</code>')) {
-                botMessage = `<pre><code>${botMessage.replace(/<\/?code>/g, '')}</code></pre>`;
+                botMessage = `<pre><code>${botMessage.replace(/<\/?code>/g,
+'')}</code></pre>`;
             } else {
                 // Usar markdown para respostas mais ricas
                 botMessage = marked.parse(botMessage);
