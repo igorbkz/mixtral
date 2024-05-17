@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot Inteligente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -23,12 +26,12 @@
             width: 100%;
             max-width: 700px;
             background-color: var(--container-bg-color, #3c3c3c);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: background-color 0.3s, color 0.3s;
+            transition: background-color 0.3s;
         }
 
         #messages {
@@ -47,7 +50,6 @@
             word-wrap: break-word;
             opacity: 0;
             animation: fadeIn 0.3s forwards;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         .user-message {
@@ -67,6 +69,7 @@
             padding: 8px;
             border-radius: 8px;
             overflow-x: auto;
+            max-width: 100%;
         }
 
         .typing-indicator {
@@ -81,7 +84,6 @@
             padding: 5px 10px;
             border-radius: 5px;
             font-style: italic;
-            transition: background-color 0.3s, color 0.3s;
         }
 
         #input-container {
@@ -89,7 +91,6 @@
             padding: 10px;
             border-top: 1px solid #ccc;
             background-color: var(--input-bg-color, #4c4c4c);
-            transition: background-color 0.3s, color 0.3s;
         }
 
         #user-input {
@@ -121,7 +122,8 @@
         #clear-chat {
             margin: 10px;
             padding: 10px 15px;
-            background-color: #dc3545;
+            background-color: #dc3545
+;
             color: white;
             border: none;
             border-radius: 8px;
@@ -187,16 +189,17 @@
         }
     }
 
-    function addMessage(text, isUser) {
+    function addMessage(messageContent, isUser) {
         const messageElement = document.createElement('div');
         messageElement.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
-        if (!isUser && text.startsWith('<pre>')) {
-            messageElement.innerHTML = text;
+        if (isUser) {
+            messageElement.textContent = messageContent;
         } else {
-            messageElement.textContent = text;
+            messageElement.innerHTML = messageContent;
         }
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        hljs.highlightAll(); // Formatar código automaticamente
     }
 
     function addTypingIndicator() {
@@ -215,7 +218,7 @@
     function buildPrompt() {
         const maxHistoryLength = 8; // Limita o histórico para as últimas 8 interações
         const promptHistory = conversationHistory.slice(-maxHistoryLength);
-        let prompt = `Você é um bom assistente.`;
+        let prompt = `Você é um bom assistente e responde claramente a qualquer dúvida do usuário.`;
 
         promptHistory.forEach(msg => {
             prompt += `\n${msg.role === 'user' ? 'Usuário' : 'Assistente'}: ${msg.content}`;
@@ -238,9 +241,9 @@
         const requestData = {
             inputs: prompt,
             parameters: {
-                max_new_tokens: 300,
-                temperature: 0.6,
-                top_p: 0.85,
+                max_new_tokens: 500,
+                temperature: 0.7,
+                top_p: 0.9,
                 repetition_penalty: 1.1,
                 return_full_text: false
             }
@@ -253,21 +256,25 @@
             if (botResponse?.generated_text) {
                 botMessage = cleanResponse(botResponse.generated_text);
             } else if (botResponse?.[0]?.generated_text) {
-                botMessage = cleanResponse(botResponse[0].generated_text);
+                botMessage = cleanResponse(botResponse
+[0].generated_text);
             }
 
             // Verificar se a resposta contém código e formatá-lo adequadamente
             if (botMessage.includes('<code>') || botMessage.includes('</code>')) {
-                botMessage = `<pre>${botMessage.replace(/<\/?code>/g, '')}</pre>`;
+                botMessage = `<pre><code>${botMessage.replace(/<\/?code>/g, '')}</code></pre>`;
+            } else {
+                // Usar markdown para respostas mais ricas
+                botMessage = marked.parse(botMessage);
             }
 
             conversationHistory.push({ role: 'assistant', content: botMessage });
             localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory));
             removeElement(typingIndicator);
             addMessage(botMessage, false);
+            hljs.highlightAll(); // Formatar código após adicionar a mensagem
         } catch (error) {
-            handleApiError
-(error);
+            handleApiError(error);
             removeElement(typingIndicator);
         } finally {
             sendButton.disabled = false;
@@ -321,9 +328,9 @@
             document.documentElement.style.setProperty('--bg-color', '#2c2c2c');
             document.documentElement.style.setProperty('--text-color', '#f4f4f4');
             document.documentElement.style.setProperty('--container-bg-color', '#3c3c3c');
-            document.documentelement.style.setProperty('--input-bg-color', '#4c4c4c');
+            document.documentElement.style.setProperty('--input-bg-color', '#4c4c4c');
             document.documentElement.style.setProperty('--input-inner-bg-color', '#3c3c3c');
-            document.documentelement.style.setProperty('--input-text-color', '#f4f4f4');
+            document.documentElement.style.setProperty('--input-text-color', '#f4f4f4');
             themeToggleButton.textContent = 'Tema Claro';
         }
     }
@@ -345,6 +352,7 @@
             conversationHistory.forEach(msg => {
                 addMessage(msg.content, msg.role === 'user');
             });
+            hljs.highlightAll(); // Aplicar o destaque ao histórico carregado
         }
     }
 
