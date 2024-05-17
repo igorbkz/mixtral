@@ -218,7 +218,7 @@
     function buildPrompt() {
         const maxHistoryLength = 8; // Limita o histórico para as últimas 8 interações
         const promptHistory = conversationHistory.slice(-maxHistoryLength);
-        let prompt = `<s>[INST] Você é um bom assistente, fornecendo respostas úteis e relevantes. [/INST]\n`;
+        let prompt = `<s>[INST] Você é um bom assistente. Responda em português. [/INST]\n`;
 
         promptHistory.forEach(msg => {
             if (msg.role === 'user') {
