@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot Inteligente</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -17,21 +14,19 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: var(--bg-color, #2c2c2c);
-            color: var(--text-color, #f4f4f4);
-            transition: background-color 0.3s, color 0.3s;
+            background-color: #2c2c2c;
+            color: #f4f4f4;
         }
 
         #chat-container {
             width: 100%;
             max-width: 700px;
-            background-color: var(--container-bg-color, #3c3c3c);
+            background-color: #3c3c3c;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             border-radius: 8px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            transition: background-color 0.3s;
         }
 
         #messages {
@@ -48,8 +43,6 @@
             border-radius: 8px;
             max-width: 90%;
             word-wrap: break-word;
-            opacity: 0;
-            animation: fadeIn 0.3s forwards;
         }
 
         .user-message {
@@ -75,22 +68,30 @@
         .typing-indicator {
             display: flex;
             align-items: center;
+            justify-content: center;
             margin: 10px 0;
+            width: 100%;
         }
 
-        .typing-indicator > span {
-            margin-left: 10px;
-            background-color: #444;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-style: italic;
+        .typing-indicator .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #444;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         #input-container {
             display: flex;
             padding: 10px;
             border-top: 1px solid #ccc;
-            background-color: var(--input-bg-color, #4c4c4c);
+            background-color: #4c4c4c;
         }
 
         #user-input {
@@ -99,8 +100,8 @@
             border: 1px solid #ccc;
             border-radius: 8px;
             outline: none;
-            background-color: var(--input-inner-bg-color, #3c3c3c);
-            color: var(--input-text-color, #f4f4f4);
+            background-color: #3c3c3c;
+            color: #f4f4f4;
         }
 
         #send-button {
@@ -111,7 +112,6 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
         }
 
         #send-button:disabled {
@@ -127,24 +127,6 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        #theme-toggle {
-            margin: 10px;
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer
-;
-            transition: background-color 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
     </style>
 </head>
@@ -158,8 +140,9 @@
     </div>
 </div>
 <button id="clear-chat">Reiniciar Chat</button>
-<button id="theme-toggle">Alternar Tema</button>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
 <script>
     const API_URL = 'https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1';
     const API_KEY = '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';
@@ -167,11 +150,10 @@
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const clearChatButton = document.getElementById('clear-chat');
-    const themeToggleButton = document.getElementById('theme-toggle');
 
-    let conversationHistory = JSON.parse(localStorage.getItem('conversationHistory')) || [];
+    let conversationHistory = [];
 
-    async function query(data) {
+    async function queryAPI(data) {
         try {
             const response = await fetch(API_URL, {
                 headers: {
@@ -199,13 +181,12 @@
         }
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        hljs.highlightAll(); // Formatar código automaticamente
     }
 
     function addTypingIndicator() {
         const typingIndicator = document.createElement('div');
         typingIndicator.className = 'typing-indicator';
-        typingIndicator.innerHTML = `<span>digitando...</span>`;
+        typingIndicator.innerHTML = '<div class="loader"></div>';
         messagesContainer.appendChild(typingIndicator);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         return typingIndicator;
@@ -216,9 +197,9 @@
     }
 
     function buildPrompt() {
-        const maxHistoryLength = 8; // Limita o histórico para as últimas 8 interações
+        const maxHistoryLength = 15;
         const promptHistory = conversationHistory.slice(-maxHistoryLength);
-        let prompt = `<s>[INST] Você é um bom assistente. Responda em português. [/INST]\n`;
+        let prompt = `<s>[INST] Você é um bom assistente que responde em português. [/INST]\n`;
 
         promptHistory.forEach(msg => {
             if (msg.role === 'user') {
@@ -232,18 +213,12 @@
     }
 
     function cleanResponse(response) {
-        return response.trim();
-    }
-
-    function handleApiError(error) {
-        addMessage(`Desculpe, ocorreu um erro: ${error}`, false);
+        return response.trim().replace(/<\/?s>/g, '');
     }
 
     async function processBotResponse(typingIndicator) {
-        const prompt = buildPrompt();
-
         const requestData = {
-            inputs: prompt,
+            inputs: buildPrompt(),
             parameters: {
                 max_new_tokens: 500,
                 temperature: 0.7,
@@ -254,7 +229,7 @@
         };
 
         try {
-            const botResponse = await query(requestData);
+            const botResponse = await queryAPI(requestData);
             let botMessage = 'Desculpe, não consegui gerar uma resposta.';
 
             if (botResponse?.generated_text) {
@@ -263,12 +238,9 @@
                 botMessage = cleanResponse(botResponse[0].generated_text);
             }
 
-            // Verificar se a resposta contém código e formatá-lo adequadamente
             if (botMessage.includes('<code>') || botMessage.includes('</code>')) {
-                botMessage = `<pre><code>${botMessage.replace(/<\/?code>/g,
-'')}</code></pre>`;
+                botMessage = `<pre><code>${botMessage.replace(/<\/?code>/g, '')}</code></pre>`;
             } else {
-                // Usar markdown para respostas mais ricas
                 botMessage = marked.parse(botMessage);
             }
 
@@ -276,9 +248,8 @@
             localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory));
             removeElement(typingIndicator);
             addMessage(botMessage, false);
-            hljs.highlightAll(); // Formatar código após adicionar a mensagem
         } catch (error) {
-            handleApiError(error);
+            addMessage(`Desculpe, ocorreu um erro: ${error.message}`, false);
             removeElement(typingIndicator);
         } finally {
             sendButton.disabled = false;
@@ -292,75 +263,39 @@
 
         conversationHistory.push({ role: 'user', content: userMessage });
         localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory));
+
         addMessage(userMessage, true);
         userInput.value = '';
-        sendButton.disabled = true;
+
         const typingIndicator = addTypingIndicator();
+        sendButton.disabled = true;
+
         processBotResponse(typingIndicator);
     }
 
-    function clearChatHistory() {
-        conversationHistory = [];
-        localStorage.removeItem('conversationHistory');
-        messagesContainer.innerHTML = '';
-    }
-
-    function debounce(func, delay) {
-        let timeout;
-        return function (...args) {
-            const context = this;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func.apply(context, args), delay);
-        };
-    }
-
-    function handleUserInputChange() {
+    sendButton.addEventListener('click', handleUserInput);
+    userInput.addEventListener('input', () => {
         sendButton.disabled = userInput.value.trim() === '';
-    }
-
-    function toggleTheme() {
-        const currentTheme = document.documentElement.style.getPropertyValue('--bg-color');
-        if (currentTheme === '#2c2c2c') {
-            document.documentElement.style.setProperty('--bg-color', '#f4f4f4');
-            document.documentElement.style.setProperty('--text-color', '#2c2c2c');
-            document.documentElement.style.setProperty('--container-bg-color', '#e0e0e0');
-            document.documentElement.style.setProperty('--input-bg-color', '#d0d0d0');
-            document.documentElement.style.setProperty('--input-inner-bg-color', '#c0c0c0');
-            document.documentElement.style.setProperty('--input-text-color', '#2c2c2c');
-            themeToggleButton.textContent = 'Tema Escuro';
-        } else {
-            document.documentElement.style.setProperty('--bg-color', '#2c2c2c');
-            document.documentElement.style.setProperty('--text-color', '#f4f4f4');
-            document.documentElement.style.setProperty('--container-bg-color', '#3c3c3c');
-            document.documentElement.style.setProperty('--input-bg-color', '#4c4c4c');
-            document.documentElement.style.setProperty('--input-inner-bg-color', '#3c3c3c');
-            document.documentElement.style.setProperty('--input-text-color', '#f4f4f4');
-            themeToggleButton.textContent = 'Tema Claro';
-        }
-    }
-
-    sendButton.addEventListener('click', debounce(handleUserInput, 300));
-    userInput.addEventListener('input', handleUserInputChange);
-    userInput.addEventListener('keypress', e => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
+    });
+    userInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && !sendButton.disabled) {
             handleUserInput();
         }
     });
 
-    clearChatButton.addEventListener('click', clearChatHistory);
-    themeToggleButton.addEventListener('click', toggleTheme);
+    clearChatButton.addEventListener('click', () => {
+        conversationHistory = [];
+        localStorage.removeItem('conversationHistory');
+        messagesContainer.innerHTML = '';
+    });
 
-    function loadChatHistory() {
-        if (conversationHistory.length > 0) {
-            conversationHistory.forEach(msg => {
-                addMessage(msg.content, msg.role === 'user');
-            });
-            hljs.highlightAll(); // Aplicar o destaque ao histórico carregado
+    window.addEventListener('load', () => {
+        const storedHistory = localStorage.getItem('conversationHistory');
+        if (storedHistory) {
+            conversationHistory = JSON.parse(storedHistory);
+            conversationHistory.forEach(msg => addMessage(msg.content, msg.role === 'user'));
         }
-    }
-
-    loadChatHistory();
+    });
 </script>
 </body>
 </html>
