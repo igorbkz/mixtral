@@ -284,9 +284,11 @@
     });
 
     clearChatButton.addEventListener('click', () => {
-        conversationHistory = [];
-        localStorage.removeItem('conversationHistory');
-        messagesContainer.innerHTML = '';
+        if (confirm("Tem certeza de que deseja reiniciar a conversa? Todos os dados serão perdidos.")) {
+            conversationHistory = [];
+            localStorage.removeItem('conversationHistory');
+            messagesContainer.innerHTML = '';
+        }
     });
 
     window.addEventListener('load', () => {
