@@ -274,30 +274,35 @@
     }
 
     sendButton.addEventListener('click', handleUserInput);
+
     userInput.addEventListener('input', () => {
         sendButton.disabled = userInput.value.trim() === '';
     });
-    userInput.addEventListener('keydown', (event) => {
+
+    userInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter' && !sendButton.disabled) {
             handleUserInput();
         }
     });
 
     clearChatButton.addEventListener('click', () => {
-        if (confirm("Tem certeza de que deseja reiniciar a conversa? Todos os dados serão perdidos.")) {
+        if (confirm('Tem certeza de que deseja reiniciar o chat? Isso apagará todo o histórico.')) {
             conversationHistory = [];
             localStorage.removeItem('conversationHistory');
             messagesContainer.innerHTML = '';
         }
     });
 
-    window.addEventListener('load', () => {
+    function loadConversationHistory() {
         const storedHistory = localStorage.getItem('conversationHistory');
         if (storedHistory) {
             conversationHistory = JSON.parse(storedHistory);
             conversationHistory.forEach(msg => addMessage(msg.content, msg.role === 'user'));
         }
-    });
+    }
+
+    loadConversationHistory();
+    userInput.focus();
 </script>
 </body>
 </html>
