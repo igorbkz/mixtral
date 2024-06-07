@@ -289,10 +289,29 @@
 
     function saveConversationHistory() {
         try {
-            localStorage.setItem('conversationHistory', JSON.stringify(conversationHistory));
+            const compactedData = btoa(JSON.stringify(conversationHistory));
+            localStorage.setItem('conversationHistory', compactedData);
         } catch (error) {
             console.error('Erro ao salvar histórico de conversa:', error);
         }
+    }
+
+    function loadConversationHistory() {
+        try {
+            const storedData = localStorage.getItem('conversationHistory');
+            if (storedData) {
+                const decompressedData = JSON.parse(atob(storedData));
+                conversationHistory = decompressedData;
+                conversationHistory.forEach(msg => addMessage(msg.content, msg.role === 'user'));
+            }
+        } catch (error) {
+            console.error('Erro ao carregar histórico de conversa:', error);
+        }
+    }
+
+    function summarizeConversation(history) {
+        // Função de resumo a ser implementada conforme necessidade
+        return history.slice(-10); // Exemplo simples: manter as últimas 10 mensagens
     }
 
     sendButton.addEventListener('click', debouncedHandleUserInput);
@@ -314,18 +333,6 @@
             messagesContainer.innerHTML = '';
         }
     });
-
-    function loadConversationHistory() {
-        try {
-            const storedHistory = localStorage.getItem('conversationHistory');
-            if (storedHistory) {
-                conversationHistory = JSON.parse(storedHistory);
-                conversationHistory.forEach(msg => addMessage(msg.content, msg.role === 'user'));
-            }
-        } catch (error) {
-            console.error('Erro ao carregar histórico de conversa:', error);
-        }
-    }
 
     loadConversationHistory();
     userInput.focus();
