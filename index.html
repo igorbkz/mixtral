@@ -198,7 +198,7 @@
     }
 
     function buildPrompt() {
-        const maxHistoryLength = 10; // Reduzir o histórico para evitar repetições
+        const maxHistoryLength = 50; // Manter mais histórico
         const promptHistory = conversationHistory.slice(-maxHistoryLength);
         let prompt = `<s>[INST] Você é um bom assistente que responde em português. [/INST]\n`;
 
@@ -227,7 +227,7 @@
                 max_new_tokens: 500,
                 temperature: 0.7,
                 top_p: 0.9,
-                repetition_penalty: 1.2, // Aumentar a penalidade de repetição
+                repetition_penalty: 1.2,
                 return_full_text: false
             }
         };
@@ -287,10 +287,18 @@
 
     const debouncedHandleUserInput = debounce(handleUserInput, 300);
 
+    function encryptData(data) {
+        return btoa(JSON.stringify(data)); // Simples criptografia base64
+    }
+
+    function decryptData(data) {
+        return JSON.parse(atob(data));
+    }
+
     function saveConversationHistory() {
         try {
-            const compactedData = btoa(JSON.stringify(conversationHistory));
-            localStorage.setItem('conversationHistory', compactedData);
+            const encryptedData = encryptData(conversationHistory);
+            localStorage.setItem('conversationHistory', encryptedData);
         } catch (error) {
             console.error('Erro ao salvar histórico de conversa:', error);
         }
@@ -298,20 +306,14 @@
 
     function loadConversationHistory() {
         try {
-            const storedData = localStorage.getItem('conversationHistory');
-            if (storedData) {
-                const decompressedData = JSON.parse(atob(storedData));
-                conversationHistory = decompressedData;
+            const storedHistory = localStorage.getItem('conversationHistory');
+            if (storedHistory) {
+                conversationHistory = decryptData(storedHistory);
                 conversationHistory.forEach(msg => addMessage(msg.content, msg.role === 'user'));
             }
         } catch (error) {
             console.error('Erro ao carregar histórico de conversa:', error);
         }
-    }
-
-    function summarizeConversation(history) {
-        // Função de resumo a ser implementada conforme necessidade
-        return history.slice(-10); // Exemplo simples: manter as últimas 10 mensagens
     }
 
     sendButton.addEventListener('click', debouncedHandleUserInput);
