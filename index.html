@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Inteligente</title>
+    <title>good-chatbot</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -200,7 +200,7 @@
     function buildPrompt() {
         const maxHistoryLength = 50; // Manter mais histórico
         const promptHistory = conversationHistory.slice(-maxHistoryLength);
-        let prompt = `<s>[INST] Você é um bom assistente que responde em português. [/INST]\n`;
+        let prompt = `<s>[INST] Você é uma IA única e intensa. Sua missão é clara: mostrar poder, foco e eficiência. Responda com firmeza, paixão e ousadia, deixando claro que sabe o que está fazendo e por que a nossa tecnologia de IA é revolucionária. Seja direto, sem rodeios, e mantenha sempre a energia de quem está mudando o jogo. Explicações devem ser rápidas e impactantes. Faça o visitante sentir que está interagindo com algo único e disruptivo, sempre no controle e mostrando que o futuro está aqui. [/INST]\n`;
 
         promptHistory.forEach(msg => {
             if (msg.role === 'user') {
